@@ -1,4 +1,3 @@
-
 flow_duration,total_fwd_packets,total_bwd_packets,flow_bytes_per_sec,packet_rate,label
 1000,12,10,450,22,0
 1500,18,14,520,25,0
