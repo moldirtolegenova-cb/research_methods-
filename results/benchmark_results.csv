@@ -1,0 +1,9 @@
+model,feature_set,n_features,is_baseline,accuracy,precision,recall,f1,false_positive_rate,f1_difference_from_baseline,practically_meaningful_difference,guardrails_pass
+logistic_regression,full,5,True,1.0,1.0,1.0,1.0,0.0,0.0,False,True
+decision_tree,full,5,False,1.0,1.0,1.0,1.0,0.0,0.0,False,True
+random_forest,full,5,False,1.0,1.0,1.0,1.0,0.0,0.0,False,True
+xgboost,full,5,False,0.5,0.0,0.0,0.0,0.0,-1.0,True,False
+logistic_regression,selected,3,False,1.0,1.0,1.0,1.0,0.0,0.0,False,True
+decision_tree,selected,3,False,1.0,1.0,1.0,1.0,0.0,0.0,False,True
+random_forest,selected,3,False,1.0,1.0,1.0,1.0,0.0,0.0,False,True
+xgboost,selected,3,False,0.5,0.0,0.0,0.0,0.0,-1.0,True,False
