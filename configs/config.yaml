@@ -20,6 +20,7 @@ feature_sets:
     - total_bwd_packets
     - flow_bytes_per_sec
     - packet_rate
+
   selected:
     - flow_duration
     - total_fwd_packets

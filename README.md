@@ -1,48 +1,69 @@
-
 # Comparative Evaluation of Machine Learning Models for Flow-Based DDoS Attack Detection
 
 ## Authors
-- [Kudaibergen Nazerke]
-- [Tolegenova Moldir]
+
+- Kudaibergen Nazerke
+- Tolegenova Moldir
 
 ## Overview
-This project investigates how classifier selection and feature selection affect
-flow-based Distributed Denial of Service (DDoS) attack detection.
 
-The benchmark compares Logistic Regression, Decision Tree, Random Forest,
-and XGBoost using a full feature set and a predefined selected feature subset.
+This project investigates how machine learning classifier choice and feature-set selection affect flow-based Distributed Denial of Service (DDoS) attack detection.
 
-The included synthetic sample verifies pipeline execution only. It is not
-representative of real-world network traffic and cannot support research conclusions.
+The benchmark compares four classifiers:
+
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- XGBoost
+
+Each classifier is evaluated using two predefined feature sets: `full` and `selected`. The pipeline calculates classification metrics, compares each configuration with a baseline, checks predefined performance guardrails, and saves the results as a CSV file.
+
+**Important:** The included dataset contains only ten synthetic records. It is intended to verify that the pipeline runs correctly. It is not representative of real network traffic and cannot support conclusions about real-world DDoS detection.
 
 ## Research Question
-How do different machine learning classifiers and feature selection strategies
-affect the performance of flow-based DDoS attack detection?
+
+How do different machine learning classifiers and feature selection strategies affect the performance of flow-based DDoS attack detection?
+
+## Research Objective
+
+To establish a reproducible experimental pipeline for comparing four machine learning classifiers and two predefined feature sets under consistent evaluation conditions.
 
 ## Hypotheses
-H0: The evaluated classifiers and feature sets do not produce a practically
-meaningful difference in F1-score under identical evaluation conditions.
 
-H1: At least one classifier or feature set produces a practically meaningful
-difference in F1-score under identical evaluation conditions.
+**H0 — Null hypothesis:** Under the same dataset, preprocessing, train-test split, and evaluation protocol, the evaluated classifiers and feature sets do not produce a practically meaningful difference in F1-score.
 
-## Primary Metric
-F1-score.
+**H1 — Alternative hypothesis:** At least one evaluated classifier or feature set produces a practically meaningful difference in F1-score.
 
-## Secondary and Guardrail Metrics
+A difference of 0.02 in F1-score is defined as the minimum practically meaningful difference for the planned comparison. The current synthetic dataset is insufficient to test these hypotheses reliably.
+
+## Evaluation Metrics
+
+**Primary metric:** F1-score.
+
+**Secondary metrics:**
+
 - Precision
-- Recall (target: at least 0.90)
+- Recall
 - Accuracy
-- False-positive rate (target: at most 0.05)
+- False-positive rate (FPR)
 
-The thresholds are evaluation targets, not guaranteed results.
+The predefined performance targets are:
+
+- Recall ≥ 0.90
+- FPR ≤ 0.05
+
+These are targets, not guaranteed results.
 
 ## Baseline
-Logistic Regression trained on the full feature set.
+
+The baseline is Logistic Regression trained using the full feature set.
+
+Other configurations are compared with the baseline using their F1-score difference.
 
 ## Repository Structure
+
 ```text
-ddos-ml-benchmark/
+research_methods-/
 ├── configs/
 │   └── config.yaml
 ├── data/
@@ -61,80 +82,107 @@ ddos-ml-benchmark/
 └── requirements.txt
 ```
 
+The `results/benchmark_results.csv` file is generated when the benchmark runs. It may be included in the repository as an example output.
+
 ## System Requirements
-- Python 3.11
+
+- Python 3.13 (tested environment)
 - pip
 - Internet access for installing dependencies
 
 ## Quickstart Guide
 
-### 1. Create and activate a virtual environment
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/moldirtolegenova-cb/research_methods-.git
+cd research_methods-
+```
+
+### 2. Create and activate a virtual environment
 
 Windows PowerShell:
 
 ```powershell
-py -3.11 -m venv .venv
+py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
 macOS/Linux:
 
 ```bash
-python3.11 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 2. Install pinned dependencies
+### 3. Install dependencies
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-### 3. Run the benchmark
+### 4. Run the benchmark
 
 ```bash
 python src/benchmark.py --config configs/config.yaml
 ```
 
-The script prints the evaluation metrics and writes the results to
-`results/benchmark_results.csv`.
+The script prints the evaluation results and saves them to:
 
-## Configuration
-Experiment parameters are stored in `configs/config.yaml`.
-The configuration defines the dataset path, target label, feature sets,
-classifier list, baseline, evaluation settings, and guardrail thresholds.
+```text
+results/benchmark_results.csv
+```
 
 ## Experimental Protocol
-All configurations use the same train-test partition and random seed.
-The same target labels and evaluation metrics are applied to each model.
-The selected feature subset is defined before evaluation.
 
-## Planned Benchmarks
+1. Load the dataset from the configured path.
+2. Validate the target labels and input features.
+3. Convert the configured positive label to the positive binary class.
+4. Create one stratified train-test split using the configured random seed.
+5. Train each classifier using both feature sets.
+6. Calculate accuracy, precision, recall, F1-score, and FPR.
+7. Compare each configuration with the baseline.
+8. Check whether the recall and FPR guardrails are satisfied.
+9. Save the results as a CSV file.
 
-| Model | Full Features | Selected Features |
-|---|---|---|
-| Logistic Regression (baseline) | Yes | Yes |
-| Decision Tree | Yes | Yes |
-| Random Forest | Yes | Yes |
-| XGBoost | Yes | Yes |
+All configurations use the same train-test partition to make the comparisons consistent.
 
 ## Data
-`data/sample/flows.csv` contains ten synthetic records for pipeline testing.
-Replace or supplement it with a suitable labeled flow-based network traffic
-dataset for the actual research experiment. Document the dataset source,
-license, label mapping, and preprocessing decisions.
+
+The file `data/sample/flows.csv` contains ten synthetic records with five flow-based features and a binary label.
+
+The features are:
+
+- `flow_duration`
+- `total_fwd_packets`
+- `total_bwd_packets`
+- `flow_bytes_per_sec`
+- `packet_rate`
+
+The target column is `label`, where `0` represents benign traffic and `1` represents DDoS traffic in the included sample.
+
+For a full research experiment, replace or supplement the synthetic sample with a suitable labeled flow-based network traffic dataset. Document the source, license, label mapping, preprocessing decisions, and any exclusions.
 
 ## Limitations
-A small synthetic sample is not sufficient to estimate real-world detection
-performance, establish statistical significance, or validate the hypotheses.
-The final experiment requires representative data and an appropriate
-evaluation protocol.
+
+- The synthetic sample is extremely small.
+- The synthetic records are not representative of real network traffic.
+- The single train-test split does not provide a robust estimate of model performance.
+- No statistical significance can be established from the current sample.
+- Results should not be interpreted as evidence that one classifier is superior for real-world DDoS detection.
+
+A full experiment should use representative data, suitable preprocessing, repeated evaluation or cross-validation, and an appropriate statistical comparison.
+
+## Reproducibility
+
+The repository includes pinned Python dependencies, an experiment configuration, a runnable benchmark script, and a sample dataset.
+
+The random seed, feature sets, models, baseline, evaluation settings, and guardrails are defined in `configs/config.yaml`.
 
 ## Citation
-If this repository is used in academic work, cite the project as:
 
-[Author(s)]. (2026). Comparative Evaluation of Machine Learning Models
-for Flow-Based DDoS Attack Detection. GitHub repository.
+Kudaibergen Nazerke and Tolegenova Moldir. (2026). *Comparative Evaluation of Machine Learning Models for Flow-Based DDoS Attack Detection*. GitHub repository.
 
 ## License
+
 This project is licensed under the MIT License. See `LICENSE`.
