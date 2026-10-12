@@ -1,0 +1,43 @@
+
+experiment:
+  name: "flow-based-ddos-detection"
+  random_seed: 42
+
+data:
+  path: "data/sample/flows.csv"
+  target_column: "label"
+  positive_label: 1
+
+evaluation:
+  test_size: 0.4
+  primary_metric: "f1"
+  practical_f1_difference: 0.02
+
+feature_sets:
+  full:
+    - flow_duration
+    - total_fwd_packets
+    - total_bwd_packets
+    - flow_bytes_per_sec
+    - packet_rate
+  selected:
+    - flow_duration
+    - total_fwd_packets
+    - flow_bytes_per_sec
+
+models:
+  - logistic_regression
+  - decision_tree
+  - random_forest
+  - xgboost
+
+baseline:
+  model: "logistic_regression"
+  feature_set: "full"
+
+guardrails:
+  min_recall: 0.90
+  max_false_positive_rate: 0.05
+
+output:
+  path: "results/benchmark_results.csv"
