@@ -178,3 +178,62 @@ A future study should use representative data, repeated evaluation or cross-vali
 The current contribution is a reproducible benchmark pipeline that compares four classifiers across two predefined feature sets and reports consistent classification metrics.
 
 Empirical conclusions about which model performs best will require evaluation on a suitable real-world or appropriately documented research dataset.
+
+## Experimental Evaluation — Task 3
+
+### Research Objective
+
+The objective is to compare machine learning models for
+flow-based DDoS attack detection and evaluate their
+classification quality and computational performance.
+
+### Models
+
+The evaluated classifiers are:
+
+1. Logistic Regression
+2. Decision Tree
+3. Random Forest
+4. XGBoost
+
+### Evaluation Metrics
+
+Classification performance:
+
+- Accuracy
+- Precision
+- Recall
+- F1-score
+- False Positive Rate (FPR)
+
+Computational performance:
+
+- Inference latency (ms)
+- Throughput (requests per second)
+- Error rate
+
+### Experimental Procedure
+
+The evaluation procedure consists of:
+
+1. Loading the flow-based dataset.
+2. Separating training and evaluation data.
+3. Training the selected classifiers.
+4. Performing warm-up inference runs.
+5. Recording evaluation measurements.
+6. Aggregating repeated measurements.
+7. Calculating median, p95, p99 and 95% confidence intervals.
+8. Comparing classification and computational performance.
+
+### Reproducibility
+
+The random seed is fixed at 42.
+
+The same dataset, model configurations and evaluation
+procedure should be used when reproducing the experiment.
+
+### Limitations
+
+Results obtained from a small sample dataset are considered
+preliminary. They should not be interpreted as evidence
+of generalization to large-scale real-world DDoS traffic.

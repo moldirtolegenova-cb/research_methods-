@@ -1,39 +1,44 @@
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
 
+# Virtual environments
 .venv/
 venv/
 env/
 
+# Jupyter
 .ipynb_checkpoints/
-.idea/
+
+# IDE
 .vscode/
+.idea/
+
+# Operating system
 .DS_Store
 Thumbs.db
+desktop.ini
 
-.env
-.env.*
-!.env.example
-
+# Temporary files
+*.tmp
 *.log
-logs/
-tmp/
-temp/
+*.bak
 
-results/*.csv
-results/*.json
-results/*.log
-!results/.gitkeep
+# Large raw datasets
+data/raw/*
+!data/raw/.gitkeep
 
+# Generated temporary model files
 *.pkl
 *.joblib
-*.onnx
-*.pt
-*.pth
-*.h5
-*.model
 
-data/raw/
-data/processed/
+# Keep processed research results
+!data/processed/
+!data/processed/*.csv
+!results/
+!results/*.csv
+!reports/
+!reports/figures/
+!reports/figures/*.pdf
+!reports/figures/*.png
