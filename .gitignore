@@ -42,3 +42,7 @@ data/raw/*
 !reports/figures/
 !reports/figures/*.pdf
 !reports/figures/*.png
+
+# Allow the required Task 3 benchmark file
+!data/raw/test_run.jsonl
+

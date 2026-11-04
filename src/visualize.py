@@ -9,6 +9,7 @@ import seaborn as sns
 ROOT = Path(__file__).resolve().parents[1]
 
 DATA_PATH = ROOT / "data/processed/metrics_summary.csv"
+RAW_PATH = ROOT / "data/raw/test_run.jsonl"
 FIGURES_DIR = ROOT / "reports/figures"
 
 sns.set_theme(style="whitegrid", context="paper")
@@ -74,21 +75,28 @@ def plot_latency(df):
 
 
 def plot_distribution(df):
-    fig, ax = plt.subplots(figsize=(9, 6))
+
+    df = df[
+        (df["phase"] == "evaluation") &
+        (~df["is_warmup"].astype(bool)) &
+        (~df["error"].astype(bool))
+    ].copy()
+
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     sns.boxplot(
         data=df,
         x="model",
-        y="median_latency_ms",
+        y="latency_ms",
         hue="model",
         palette="colorblind",
         legend=False,
         ax=ax
     )
 
-    ax.set_title("Distribution of Median Inference Latency")
+    ax.set_title("Distribution of Inference Latency")
     ax.set_xlabel("Machine Learning Model")
-    ax.set_ylabel("Median inference latency (ms)")
+    ax.set_ylabel("Inference latency (ms)")
     ax.tick_params(axis="x", rotation=20)
 
     fig.tight_layout()
@@ -111,6 +119,7 @@ def main():
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
     df = pd.read_csv(DATA_PATH)
+    raw = pd.read_json(RAW_PATH, lines=True)
 
     plot_latency(df)
     plot_distribution(df)
