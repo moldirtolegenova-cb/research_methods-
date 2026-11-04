@@ -150,6 +150,21 @@ For computational analysis, benchmark measurements are processed separately:
 7. Generating scientific visualizations.
 
 ## 9. Results and Discussion
+### Baseline vs Proposed Method
+
+The baseline classifier is Logistic Regression.
+The proposed method is the best-performing classifier
+selected according to the experimental evaluation.
+
+| Metric | Baseline | Proposed Method |
+|---|---:|---:|
+| F1-score | Actual value | Actual value |
+| False Positive Rate | Actual value | Actual value |
+| Median Latency (ms) | Actual value | Actual value |
+| p95 Latency (ms) | Actual value | Actual value |
+| p99 Latency (ms) | Actual value | Actual value |
+| Throughput (samples/s) | Actual value | Actual value |
+| Error Rate | Actual value | Actual value |
 
 ### 9.1 Classification Results — Task 2
 
