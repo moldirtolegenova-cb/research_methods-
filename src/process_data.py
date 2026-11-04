@@ -16,7 +16,9 @@ OUTPUT_PATH = ROOT / "data/processed/metrics_summary.csv"
 np.random.seed(SEED)
 
 
-def bootstrap_ci(values, iterations=BOOTSTRAP_ITERATIONS):
+def bootstrap_ci(values, iterations=BOOTSTRAP_ITERATIONS,
+                 statistic=np.median):
+
     values = np.asarray(values, dtype=float)
     values = values[np.isfinite(values)]
 
@@ -34,11 +36,11 @@ def bootstrap_ci(values, iterations=BOOTSTRAP_ITERATIONS):
         replace=True
     )
 
-    means = samples.mean(axis=1)
+    estimates = statistic(samples, axis=1)
 
     return (
-        float(np.percentile(means, 2.5)),
-        float(np.percentile(means, 97.5))
+        float(np.percentile(estimates, 2.5)),
+        float(np.percentile(estimates, 97.5))
     )
 
 
@@ -111,8 +113,12 @@ def main():
         f1_values = fold_metrics["f1_score"].dropna().to_numpy()
         fpr_values = fold_metrics["fpr"].dropna().to_numpy()
 
-        f1_low, f1_high = bootstrap_ci(f1_values)
-        fpr_low, fpr_high = bootstrap_ci(fpr_values)
+        f1_low, f1_high = bootstrap_ci(
+            f1_values, statistic=np.mean
+        )
+        fpr_low, fpr_high = bootstrap_ci(
+            fpr_values, statistic=np.mean
+        )
 
         total = len(group)
         errors = int(group["error"].sum())

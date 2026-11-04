@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -43,6 +44,17 @@ MODELS = {
     )
 }
 
+from xgboost import XGBClassifier
+
+MODELS["XGBoost"] = lambda: XGBClassifier(
+    n_estimators=100,
+    max_depth=3,
+    learning_rate=0.1,
+    eval_metric="logloss",
+    random_state=SEED,
+    n_jobs=1
+)
+
 def main():
     df = pd.read_csv(DATA_PATH)
 
@@ -63,6 +75,7 @@ def main():
 
     X = df.drop(columns=[target])
     y = df[target]
+    y = LabelEncoder().fit_transform(y)
 
     X = pd.get_dummies(X, drop_first=True)
     X = X.replace([np.inf, -np.inf], np.nan)
