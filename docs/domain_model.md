@@ -1,16 +1,18 @@
 
-# Domain Model: Flow-Based DDoS Detection
+# Domain Model: Flow-Based DDoS Attack Detection
 
 ## 1. Research Domain
 
-The research focuses on detecting Distributed Denial of Service
-(DDoS) attacks using machine learning classifiers trained on
-network flow features.
+This research evaluates machine learning classifiers
+for detecting Distributed Denial of Service (DDoS)
+attacks using network flow-based features.
 
-The system receives network flow records and classifies each
-record as either legitimate traffic or malicious traffic.
+The system receives network flow records and predicts
+whether the observed traffic is benign or malicious.
 
-## 2. Input Data
+The task is formulated as binary classification.
+
+## 2. Dataset Definition
 
 Let the dataset be:
 
@@ -20,19 +22,32 @@ D = \{(x_i,y_i)\}_{i=1}^{N}
 
 where:
 
-- \(x_i \in \mathbb{R}^{d}\) is a feature vector.
-- \(y_i \in \{0,1\}\) is the binary class label.
 - \(N\) is the number of observations.
-- \(d\) is the number of selected features.
+- \(x_i \in \mathbb{R}^{d}\) is an input feature vector.
+- \(d\) is the number of input features.
+- \(y_i \in \{0,1\}\) is the actual class label.
 
 Class definitions:
 
-- \(y_i=0\): legitimate network traffic.
+- \(y_i=0\): Benign traffic.
 - \(y_i=1\): DDoS attack traffic.
+
+The input features include:
+
+- Flow duration.
+- Total forward packets.
+- Total backward packets.
+- Flow bytes per second.
+- Packet rate.
+
+The current sample dataset contains ten synthetic
+observations. Therefore, the classification results
+are preliminary and cannot establish real-world
+DDoS detection performance.
 
 ## 3. Binary Classification Model
 
-Each classifier estimates:
+A classifier estimates the probability of an attack:
 
 \[
 \hat{p}_i = f_{\theta}(x_i)
@@ -40,11 +55,11 @@ Each classifier estimates:
 
 where:
 
-- \(f_{\theta}\) is the selected machine learning model.
-- \(\theta\) represents model parameters.
+- \(f_{\theta}\) is the classification model.
+- \(\theta\) represents the model parameters.
 - \(\hat{p}_i\) is the predicted probability of an attack.
 
-The final prediction is:
+The predicted class is:
 
 \[
 \hat{y}_i =
@@ -54,49 +69,65 @@ The final prediction is:
 \end{cases}
 \]
 
-## 4. Binary Cross-Entropy Loss
+The experiment compares:
 
-The objective function for binary classification is:
+1. Logistic Regression.
+2. Decision Tree.
+3. Random Forest.
+4. XGBoost.
+
+## 4. Binary Cross-Entropy Loss Function
+
+The binary classification objective is defined as:
 
 \[
 L(\theta) =
 -\frac{1}{N}
 \sum_{i=1}^{N}
 \left[
-y_i \log(\hat{p}_i)
+y_i\log(\hat{p}_i)
 +
 (1-y_i)\log(1-\hat{p}_i)
 \right]
 \]
 
-The loss measures the difference between actual labels
-and predicted attack probabilities.
+To avoid undefined logarithms, predicted probabilities
+are interpreted within the interval:
 
-For models that do not directly optimize binary cross-entropy,
-the same loss can be used as a common evaluation objective
-when probability estimates are available.
+\[
+\hat{p}_i \in [\epsilon,1-\epsilon]
+\]
 
-## 5. Evaluation Metrics
+where \(\epsilon\) is a small positive constant.
 
-### Accuracy
+The loss function measures the difference between
+actual labels and predicted probabilities.
+
+This is a formal binary classification objective.
+It is not claimed that every evaluated classifier
+directly optimizes this exact loss function.
+
+## 5. Classification Evaluation Metrics
+
+### 5.1 Accuracy
 
 \[
 Accuracy = \frac{TP+TN}{TP+TN+FP+FN}
 \]
 
-### Precision
+### 5.2 Precision
 
 \[
 Precision = \frac{TP}{TP+FP}
 \]
 
-### Recall
+### 5.3 Recall
 
 \[
 Recall = \frac{TP}{TP+FN}
 \]
 
-### F1-score
+### 5.4 F1-score
 
 \[
 F1 = 2 \cdot
@@ -104,84 +135,176 @@ F1 = 2 \cdot
 {Precision+Recall}
 \]
 
-### False Positive Rate
+### 5.5 False Positive Rate
 
 \[
 FPR = \frac{FP}{FP+TN}
 \]
 
-### Inference Latency
+where:
+
+- TP: True Positive.
+- TN: True Negative.
+- FP: False Positive.
+- FN: False Negative.
+
+If a denominator is zero, the corresponding
+metric is reported according to the implementation's
+zero-division policy.
+
+## 6. Computational Performance Metrics
+
+### 6.1 Inference Latency
 
 \[
 Latency = t_{end}-t_{start}
 \]
 
-Latency is measured in milliseconds.
+Latency is measured in milliseconds:
 
-### Throughput
+\[
+Latency_{ms} =
+(t_{end}-t_{start})\times 1000
+\]
+
+### 6.2 Throughput
 
 \[
 Throughput = \frac{B}{T}
 \]
 
-where \(B\) is the number of processed samples
-and \(T\) is the elapsed time in seconds.
+where:
 
-Throughput is measured in samples per second.
+- \(B\) is the number of processed samples.
+- \(T\) is the elapsed time in seconds.
 
-### Error Rate
+The unit is samples per second.
+
+### 6.3 Error Rate
 
 \[
 ErrorRate = \frac{E}{R}
 \]
 
-where \(E\) is the number of failed evaluation runs
-and \(R\) is the total number of evaluation runs.
+where:
 
-## 6. Statistical Analysis
+- \(E\) is the number of failed evaluation runs.
+- \(R\) is the total number of evaluation runs.
 
-The median is:
+The error rate is used as a performance guardrail.
 
-\[
-Median(X) = Q_{0.50}(X)
-\]
+## 7. Statistical Analysis
 
-The 95th and 99th percentiles are:
+Warm-up measurements are excluded before
+calculating final performance statistics.
 
-\[
-p95 = Q_{0.95}(X)
-\]
+### 7.1 Median
 
 \[
-p99 = Q_{0.99}(X)
+Median(X)=Q_{0.50}(X)
 \]
 
-The bootstrap confidence interval is estimated using
-resampling with replacement.
+### 7.2 Percentiles
 
-For a bootstrap estimate \(\hat{\mu}^{*}\):
+\[
+p95=Q_{0.95}(X)
+\]
+
+\[
+p99=Q_{0.99}(X)
+\]
+
+These percentiles describe the upper tail
+of the latency distribution.
+
+### 7.3 Bootstrap Confidence Interval
+
+Bootstrap resampling is performed with replacement.
+
+For a statistic \(\hat{\theta}^{*}\), the 95%
+percentile confidence interval is:
 
 \[
 CI_{95\%} =
-[Q_{0.025}(\hat{\mu}^{*}),
-Q_{0.975}(\hat{\mu}^{*})]
+[
+Q_{0.025}(\hat{\theta}^{*}),
+Q_{0.975}(\hat{\theta}^{*})
+]
 \]
 
-The random seed is fixed at 42.
+The experiment uses:
 
-## 7. Mathematical Notation Table
+- Bootstrap iterations: 5000.
+- Random seed: 42.
+- Confidence level: 95%.
+
+The bootstrap interval describes uncertainty in
+the estimated statistic under the observed sample.
+
+Repeated cross-validation folds may share observations
+and should not be interpreted as fully independent
+experimental samples.
+
+## 8. Performance Guardrails
+
+The predefined classification targets are:
+
+\[
+Recall \geq 0.90
+\]
+
+\[
+FPR \leq 0.05
+\]
+
+These values are target thresholds, not guaranteed
+experimental outcomes.
+
+The computational guardrail is:
+
+\[
+ErrorRate = \frac{E}{R}
+\]
+
+A lower error rate indicates more reliable
+benchmark execution.
+
+## 9. Experimental Comparison
+
+The baseline model is Logistic Regression.
+
+The alternative models are:
+
+- Decision Tree.
+- Random Forest.
+- XGBoost.
+
+The comparison considers:
+
+- F1-score.
+- False Positive Rate.
+- Median inference latency.
+- p95 latency.
+- p99 latency.
+- Throughput.
+- Error Rate.
+
+The preferred configuration should balance
+classification quality and computational efficiency.
+
+## 10. Mathematical Notation Table
 
 | Symbol | Definition |
 |---|---|
 | \(D\) | Dataset |
 | \(N\) | Number of observations |
-| \(d\) | Number of input features |
+| \(d\) | Number of features |
 | \(x_i\) | Input feature vector |
 | \(y_i\) | Actual binary label |
 | \(\hat{y}_i\) | Predicted binary label |
 | \(\hat{p}_i\) | Predicted attack probability |
 | \(\theta\) | Model parameters |
-| \(L(\theta)\) | Loss function |
+| \(L(\theta)\) | Binary Cross-Entropy Loss |
 | TP | True Positive |
 | TN | True Negative |
 | FP | False Positive |
@@ -192,27 +315,24 @@ The random seed is fixed at 42.
 | \(T\) | Elapsed time |
 | \(E\) | Failed evaluation runs |
 | \(R\) | Total evaluation runs |
+| \(Q_p\) | Percentile at probability \(p\) |
+| \(CI_{95\%}\) | 95% Confidence Interval |
 
-## 8. Experimental Comparison
+## 11. Limitations
 
-The research compares:
+The current classification dataset contains only
+ten synthetic observations.
 
-1. Logistic Regression
-2. Decision Tree
-3. Random Forest
-4. XGBoost
+Although repeated stratified cross-validation
+is used, the small dataset cannot provide
+a reliable estimate of performance on real
+network traffic.
 
-The models are evaluated using classification quality,
-computational performance and error-rate guardrails.
+The benchmark measurements also depend on
+hardware, software versions and execution conditions.
 
-The preferred model should balance a high F1-score,
-a low false positive rate, low inference latency
-and acceptable computational efficiency.
+Further research should use a larger, representative,
+labeled network traffic dataset.
 
-## 9. Limitations
-
-The reliability of the conclusions depends on dataset size,
-class balance, data quality and evaluation methodology.
-
-Results from a small sample dataset are preliminary
-and should not be generalized to production network traffic.
+Results should therefore be interpreted as
+preliminary experimental findings.

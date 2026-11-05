@@ -1,4 +1,4 @@
-# Python
+# Python cache
 __pycache__/
 *.py[cod]
 *.pyo
@@ -24,25 +24,33 @@ desktop.ini
 *.tmp
 *.log
 *.bak
+*.swp
+
+# Python build files
+build/
+dist/
+*.egg-info/
 
 # Large raw datasets
+# Keep the required benchmark sample.
 data/raw/*
+!data/raw/test_run.jsonl
 !data/raw/.gitkeep
 
-# Generated temporary model files
+# Generated model files
 *.pkl
 *.joblib
 
-# Keep processed research results
+# Keep processed results
 !data/processed/
 !data/processed/*.csv
+
+# Keep benchmark results
 !results/
 !results/*.csv
+
+# Keep scientific figures
 !reports/
 !reports/figures/
 !reports/figures/*.pdf
 !reports/figures/*.png
-
-# Allow the required Task 3 benchmark file
-!data/raw/test_run.jsonl
-
