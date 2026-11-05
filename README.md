@@ -2,223 +2,283 @@
 
 ## 1. Research Overview
 
-This research evaluates machine learning classifiers for detecting Distributed Denial of Service (DDoS) attacks using network flow-based features.
+This research evaluates four machine learning classifiers
+for detecting Distributed Denial of Service (DDoS) attacks
+using network flow-based features.
 
-The study investigates how classifier choice and feature selection affect detection performance, false positive rates, and computational efficiency.
+The study compares classification quality and
+computational performance under different batch sizes.
 
-The objective is to establish a reproducible experimental pipeline for comparing machine learning models under consistent evaluation conditions.
-
-**Important:** The initial Task 2 dataset contains only ten synthetic records. It is intended to verify that the classification pipeline runs correctly. It is not representative of real network traffic and cannot support conclusions about real-world DDoS detection.
-
-## 2. Authors
-
-- Kudaibergen Nazerke
-- Tolegenova Moldir
-
-**Course:** Research Methods  
-**Year:** 2026
-
-## 3. Research Questions
-
-1. Which machine learning model provides the best DDoS detection performance?
-2. How does feature selection affect model performance?
-3. What is the relationship between detection quality and computational efficiency?
-4. How can false positive rates be minimized?
-
-## 4. Research Objective and Hypotheses
-
-### Research Objective
-
-To compare four machine learning classifiers and two predefined feature sets while evaluating classification performance and computational efficiency.
-
-### Hypotheses
-
-**H0 — Null Hypothesis:**
-
-Under the same dataset, preprocessing, train-test split, and evaluation protocol, the evaluated classifiers and feature sets do not produce a practically meaningful difference in F1-score.
-
-**H1 — Alternative Hypothesis:**
-
-At least one evaluated classifier or feature set produces a practically meaningful difference in F1-score.
-
-A difference of 0.02 in F1-score is defined as the minimum practically meaningful difference.
-
-The current synthetic dataset is insufficient to test these hypotheses reliably.
-
-## 5. Evaluated Machine Learning Models
-
-The benchmark compares four classifiers:
+The evaluated models are:
 
 - Logistic Regression
 - Decision Tree
 - Random Forest
 - XGBoost
 
-Each classifier is evaluated using two predefined feature sets:
+The main objective is to investigate the trade-off
+between detection quality and inference efficiency.
 
-- Full feature set
-- Selected feature set
+**Important limitation:** The initial classification
+dataset contains only ten synthetic observations.
+The results are preliminary and cannot be generalized
+to real-world network traffic.
 
-### Input Features
+## 2. Authors
 
-The initial sample dataset contains five flow-based features:
+- Kudaibergen Nazerke
+- Tolegenova Moldir
 
-- `flow_duration`
-- `total_fwd_packets`
-- `total_bwd_packets`
-- `flow_bytes_per_sec`
-- `packet_rate`
+**Course:** Research Methods
 
-The target column is `label`:
+**Year:** 2026
 
-- `0` — Benign traffic
-- `1` — DDoS traffic
+## 3. Research Questions
 
-## 6. Evaluation Metrics
+1. Which classifier provides the best F1-score?
+2. Which classifier has the lowest false positive rate?
+3. How does batch size affect inference latency?
+4. Which classifier provides the best computational efficiency?
+5. How reliable are the benchmark measurements?
 
-### 6.1 Classification Metrics
+## 4. Research Objective and Hypotheses
 
-**Primary metric:**
-- F1-score
+### Research Objective
 
-**Secondary metrics:**
+To compare four machine learning classifiers
+using classification metrics and computational
+performance measurements.
+
+### Null Hypothesis (H0)
+
+There is no practically meaningful difference
+in F1-score between the evaluated classifiers.
+
+### Alternative Hypothesis (H1)
+
+At least one evaluated classifier produces
+a practically meaningful difference in F1-score.
+
+A difference of 0.02 in F1-score is defined
+as the minimum practically meaningful difference.
+
+The small synthetic dataset does not provide
+sufficient evidence for a reliable statistical
+test of these hypotheses.
+
+## 5. Dataset and Input Features
+
+The classification dataset is stored at:
+
+`data/sample/flows.csv`
+
+The target column is:
+
+`label`
+
+Class definitions:
+
+- 0 — Benign traffic
+- 1 — DDoS traffic
+
+The input features are:
+
+| Feature | Description |
+|---|---|
+| flow_duration | Duration of the network flow |
+| total_fwd_packets | Total forward packets |
+| total_bwd_packets | Total backward packets |
+| flow_bytes_per_sec | Flow bytes per second |
+| packet_rate | Packet rate |
+
+The current sample contains ten synthetic records:
+five benign and five DDoS observations.
+
+It is used to test the experimental pipeline,
+not to establish production-level detection accuracy.
+
+## 6. Machine Learning Models
+
+The following classifiers are evaluated:
+
+1. Logistic Regression
+2. Decision Tree
+3. Random Forest
+4. XGBoost
+
+The baseline classifier is Logistic Regression.
+
+The alternative classifiers are compared
+with the baseline.
+
+The current Task 3 benchmark uses the full
+input feature set.
+
+## 7. Evaluation Metrics
+
+### Classification Metrics
+
 - Accuracy
 - Precision
 - Recall
+- F1-score
 - False Positive Rate (FPR)
 
-### 6.2 Computational Performance Metrics
+### Computational Metrics
 
-- Inference latency (ms)
-- Throughput (samples/second)
+- Median inference latency (ms)
+- p95 latency (ms)
+- p99 latency (ms)
+- Throughput (samples/s)
 - Error rate
 
-### 6.3 Statistical Analysis
+### Statistical Methods
 
-The computational measurements are analyzed using:
+The analysis uses:
 
 - Median
-- 95th percentile (p95)
-- 99th percentile (p99)
-- Bootstrap 95% Confidence Interval
+- 95th percentile
+- 99th percentile
+- Bootstrap 95% confidence intervals
+- 5000 bootstrap iterations
+- Random seed 42
 
-Warm-up measurements are excluded from the final statistical analysis.
-
-### Performance Guardrails
-
-The predefined classification performance targets are:
-
-- Recall ≥ 0.90
-- FPR ≤ 0.05
-
-These are evaluation targets, not guaranteed results.
-
-## 7. Baseline
-
-The classification benchmark uses Logistic Regression trained with the full feature set as its baseline.
-
-Other configurations are compared against this baseline using their F1-score difference.
-
-All configurations use the same train-test partition to ensure consistent comparisons.
+Warm-up measurements are excluded
+from the final statistical analysis.
 
 ## 8. Experimental Setup
 
-The research uses Python, NumPy, Pandas, and Scikit-learn for data processing and model evaluation.
+The benchmark uses repeated stratified
+cross-validation.
 
-**Random seed:** 42
+The computational experiment includes:
 
-The experimental pipeline includes:
+- Four machine learning models.
+- Six batch multipliers: 1, 2, 4, 8, 16 and 32.
+- Twenty-five timing repetitions per fold and batch.
+- Five warm-up repetitions.
+- Twenty evaluation repetitions.
 
-1. Loading the configured dataset.
-2. Validating target labels and input features.
-3. Preprocessing the data.
-4. Creating a stratified train-test split.
-5. Training each classifier using both feature sets.
-6. Calculating classification metrics.
-7. Comparing configurations against the baseline.
-8. Checking predefined performance guardrails.
-9. Saving benchmark results as CSV files.
+The raw benchmark file contains 12,000 records:
 
-For computational analysis, benchmark measurements are processed separately:
+- 2,400 warm-up records.
+- 9,600 evaluation records.
 
-1. Loading raw benchmark measurements.
-2. Filtering warm-up records.
-3. Aggregating statistical measurements.
-4. Calculating median, p95, and p99.
-5. Computing bootstrap 95% confidence intervals.
-6. Monitoring error rates.
-7. Generating scientific visualizations.
+The batch multiplier represents a multiple
+of the test-fold size.
+
+Throughput is measured as processed samples
+per elapsed second.
+
+The benchmark uses a fixed random seed of 42.
 
 ## 9. Results and Discussion
-### Baseline vs Proposed Method
 
-The baseline classifier is Logistic Regression.
-The proposed method is the best-performing classifier
-selected according to the experimental evaluation.
+### 9.1 Baseline vs Proposed Method
 
-| Metric | Baseline | Proposed Method |
+The baseline is Logistic Regression.
+
+For the current preliminary run, Decision Tree
+is selected as the alternative configuration
+because it achieved the same observed classification
+metrics with lower measured inference latency.
+
+The following table summarizes the existing
+benchmark run. Latency and throughput are aggregated
+across the six batch multipliers.
+
+| Metric | Baseline: Logistic Regression | Proposed: Decision Tree |
 |---|---:|---:|
-| F1-score | Actual value | Actual value |
-| False Positive Rate | Actual value | Actual value |
-| Median Latency (ms) | Actual value | Actual value |
-| p95 Latency (ms) | Actual value | Actual value |
-| p99 Latency (ms) | Actual value | Actual value |
-| Throughput (samples/s) | Actual value | Actual value |
-| Error Rate | Actual value | Actual value |
+| F1-score | 1.000 | 1.000 |
+| False Positive Rate | 0.000 | 0.000 |
+| Median Latency (ms) | 2.128 | 1.763 |
+| p95 Latency (ms) | 3.399 | 2.826 |
+| p99 Latency (ms) | 3.714 | 3.111 |
+| Throughput (samples/s) | 10474.31 | 12375.85 |
+| Error Rate | 0.000 | 0.000 |
 
-### 9.1 Classification Results — Task 2
+**Interpretation:**
 
-The original Task 2 benchmark results are available at:
+In this preliminary benchmark run, Decision Tree
+showed lower median latency and higher median
+throughput than Logistic Regression.
 
-`results/benchmark_results.csv`
+Both models produced the same observed F1-score
+and false positive rate.
 
-The following values represent preliminary results from the initial synthetic sample experiment.
+These findings are limited to the small synthetic
+classification dataset and the recorded hardware
+environment.
 
-| Model | Feature Set | F1-score | FPR |
-|---|---|---:|---:|
-| Logistic Regression | Full | 1.00* | 0.00* |
-| Decision Tree | Full | 1.00* | 0.00* |
-| Random Forest | Full | 1.00* | 0.00* |
-| XGBoost | Full | 0.00* | 1.00* |
+They do not establish that Decision Tree
+is generally superior for real-world DDoS detection.
 
-*These are preliminary Task 2 results. They must be verified against the actual benchmark CSV and should not be interpreted as final Task 3 results or evidence of real-world model superiority.*
+The table should be regenerated if the benchmark
+is executed again on a different environment.
 
-### 9.2 Computational Results — Task 3
+### 9.2 Statistical Processing
 
-The processed computational measurements are available at:
+Processed results are saved in:
 
 `data/processed/metrics_summary.csv`
 
-The summary includes:
+The CSV includes:
 
-- Median latency
-- p95 latency
-- p99 latency
-- Bootstrap 95% confidence intervals
-- Throughput
-- Error rates
+- Number of evaluation measurements.
+- Number of successful measurements.
+- Median latency.
+- p95 latency.
+- p99 latency.
+- Bootstrap 95% confidence intervals.
+- Median throughput.
+- F1-score.
+- False positive rate.
+- Error count.
+- Error rate.
 
-The results are generated from the actual benchmark measurements and should be interpreted according to the dataset size and experimental conditions.
+### 9.3 Scientific Visualization
 
-### 9.3 Scientific Visualizations
+#### Figure 1 — Inference Latency vs Batch Size
 
-The following figures present the computational evaluation results.
+The first figure compares inference latency
+across the four machine learning models.
 
-**Figure 1: Latency vs Load**
+The shaded areas represent bootstrap
+95% confidence intervals.
 
-![Latency vs Load](reports/figures/fig1_latency_vs_load.png)
+![Latency vs Batch Size](reports/figures/fig1_latency_vs_load.png)
 
-**Figure 2: Latency Distribution**
+[Download vector PDF figure](reports/figures/fig1_latency_vs_load.pdf)
 
-![Latency Distribution Boxplot](reports/figures/fig2_distribution_boxplot.png)
+#### Figure 2 — Latency Distribution
 
-The visualizations help examine how system load affects latency and how latency measurements are distributed across benchmark runs.
+The second figure shows the distribution
+of successful evaluation latency measurements
+at batch multiplier 1.
+
+The boxplots display the distribution,
+while the error bars indicate bootstrap
+95% confidence intervals of the median.
+
+![Latency Distribution](reports/figures/fig2_distribution_boxplot.png)
+
+[Download vector PDF figure](reports/figures/fig2_distribution_boxplot.pdf)
 
 ## 10. Domain Model
 
-The formal mathematical model, loss function, and evaluation metric definitions are documented separately.
+The formal mathematical model includes:
 
-See: [Domain Model](docs/domain_model.md)
+- Dataset definition.
+- Binary classification model.
+- Binary Cross-Entropy Loss.
+- Classification metrics.
+- Computational metrics.
+- Statistical notation.
+- Bootstrap confidence intervals.
+
+See:
+
+[Domain Model](docs/domain_model.md)
 
 ## 11. Repository Structure
 
@@ -228,18 +288,21 @@ research_methods-/
 │   └── config.yaml
 ├── data/
 │   ├── raw/
+│   │   └── test_run.jsonl
 │   ├── processed/
 │   │   └── metrics_summary.csv
 │   └── sample/
 │       └── flows.csv
 ├── docs/
-│   ├── methodology.md
-│   └── domain_model.md
+│   ├── domain_model.md
+│   └── methodology.md
 ├── notebooks/
 │   └── 01_data_analysis.ipynb
 ├── reports/
 │   └── figures/
+│       ├── fig1_latency_vs_load.pdf
 │       ├── fig1_latency_vs_load.png
+│       ├── fig2_distribution_boxplot.pdf
 │       └── fig2_distribution_boxplot.png
 ├── results/
 │   └── benchmark_results.csv
@@ -249,134 +312,151 @@ research_methods-/
 │   ├── process_data.py
 │   └── visualize.py
 ├── .gitignore
-├── LICENSE
-├── README.md
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
 
-Some output files are generated when the corresponding scripts are executed.
+## 12. Installation
 
-## 12. System Requirements
+### Requirements
 
-- Python 3.13 (tested environment)
-- pip
-- Internet connection for installing dependencies
+- Python 3.11 or newer.
+- pip.
+- Git.
 
-A compatible Python environment is required for running the experimental scripts.
-
-## 13. Reproducibility and Quickstart Guide
-
-### 13.1 Clone the Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/moldirtolegenova-cb/research_methods-.git
+
 cd research_methods-
 ```
 
-### 13.2 Create and Activate a Virtual Environment
+### Create Virtual Environment
 
-**Windows PowerShell:**
+Windows:
 
 ```powershell
-py -3.13 -m venv .venv
+py -m venv .venv
+
 .venv\Scripts\Activate.ps1
 ```
 
-**macOS/Linux:**
+Linux/macOS:
 
 ```bash
 python3 -m venv .venv
+
 source .venv/bin/activate
 ```
 
-### 13.3 Install Dependencies
+### Install Dependencies
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-### 13.4 Run the Original Classification Benchmark
+## 13. Reproducibility Guide
 
-```bash
-python src/benchmark.py --config configs/config.yaml
-```
-
-The script generates:
-
-```text
-results/benchmark_results.csv
-```
-
-### 13.5 Run the Task 3 Benchmark
+### Step 1. Generate Benchmark Measurements
 
 ```bash
 python src/run_task3_benchmark.py
 ```
 
-### 13.6 Process Raw Measurements
+This generates:
+
+`data/raw/test_run.jsonl`
+
+### Step 2. Process Raw Measurements
 
 ```bash
 python src/process_data.py
 ```
 
-This step processes the raw benchmark measurements and generates statistical summaries.
+This generates:
 
-### 13.7 Generate Scientific Visualizations
+`data/processed/metrics_summary.csv`
+
+### Step 3. Generate Scientific Figures
 
 ```bash
 python src/visualize.py
 ```
 
-The generated figures are saved in:
+This generates four figure files under:
 
-```text
-reports/figures/
-```
+`reports/figures/`
 
-### 13.8 Run the Jupyter Notebook
+### Step 4. Run the Jupyter Notebook
 
 ```bash
 jupyter notebook notebooks/01_data_analysis.ipynb
 ```
 
-The notebook provides a reproducible environment for data ingestion, statistical analysis, confidence interval calculation, error monitoring, and visualization.
+Run all cells sequentially from the beginning.
 
-## 14. Limitations
+The notebook displays the data analysis,
+statistical summaries and visualizations.
+
+## 14. Performance Guardrails
+
+The predefined classification targets are:
+
+- Recall >= 0.90
+- False Positive Rate <= 0.05
+
+The error rate is monitored as an additional
+computational reliability metric.
+
+These thresholds are evaluation targets,
+not guaranteed experimental outcomes.
+
+## 15. Limitations
 
 The research has several limitations:
 
-- The initial synthetic classification dataset contains only ten records.
-- Synthetic records are not representative of real network traffic.
-- A single train-test split does not provide a robust estimate of classification performance.
-- Statistical significance cannot be established from the initial sample.
-- Computational results depend on the size and representativeness of the benchmark measurements.
-- Further evaluation on larger and more diverse network traffic datasets is necessary.
+1. The initial dataset contains only ten synthetic records.
+2. The dataset does not represent real network traffic.
+3. Repeated cross-validation folds are not fully independent.
+4. Hardware differences may affect inference latency.
+5. A larger representative dataset is necessary
+   to validate detection performance.
+6. The current experiment does not establish
+   production-level DDoS detection accuracy.
 
-A full experiment should use representative labeled network traffic data, repeated evaluation or cross-validation, and appropriate statistical comparison methods.
+Future research should use a larger labeled
+network traffic dataset and more extensive
+experimental validation.
 
-The results should be interpreted within the limitations of the available datasets and experimental setup.
+## 16. Conclusion
 
-## 15. Reproducibility
+This project implements a reproducible experimental
+pipeline for comparing machine learning classifiers
+for flow-based DDoS attack detection.
 
-The repository includes:
+The pipeline includes raw benchmark collection,
+warm-up filtering, statistical aggregation,
+confidence interval estimation and scientific
+visualization.
 
-- Experiment configuration files
-- Python source scripts
-- Sample flow-based dataset
-- Benchmark results
-- Statistical processing scripts
-- Scientific visualizations
-- Jupyter Notebook
-- Pinned Python dependencies
+The current results demonstrate the operation
+of the experimental workflow.
 
-The random seed, models, feature sets, baseline, evaluation settings, and performance guardrails are defined in the experiment configuration.
+Further research with representative network
+traffic data is required before drawing
+general conclusions about real-world detection.
 
-## 16. Citation
+## 17. Citation
 
-Kudaibergen Nazerke and Tolegenova Moldir. (2026). *Comparative Evaluation of Machine Learning Models for Flow-Based DDoS Attack Detection*. Research Methods project. GitHub repository:
+Kudaibergen Nazerke and Tolegenova Moldir (2026).
 
-https://github.com/moldirtolegenova-cb/research_methods-
+*Comparative Evaluation of Machine Learning Models
+for Flow-Based DDoS Attack Detection.*
 
-## 17. License
+Research Methods project.
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+## 18. License
+
+This project is licensed under the MIT License.
+See the LICENSE file for details.
