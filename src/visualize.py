@@ -7,32 +7,67 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-# ==================================================
-# 1. PATHS AND CONFIGURATION
-# ==================================================
-
 ROOT = Path(__file__).resolve().parents[1]
 
-DATA_PATH = ROOT / "data/processed/metrics_summary.csv"
-RAW_PATH = ROOT / "data/raw/test_run.jsonl"
-FIGURES_DIR = ROOT / "reports/figures"
+DATA_PATH = (
+    ROOT / "data" / "processed" / "metrics_summary.csv"
+)
+
+RAW_PATH = (
+    ROOT / "data" / "raw" / "test_run.jsonl"
+)
+
+FIGURES_DIR = (
+    ROOT / "reports" / "figures"
+)
+
+SEED = 42
 
 sns.set_theme(
     style="whitegrid",
-    context="paper"
+    context="paper",
+    palette="colorblind"
 )
 
 MARKERS = ["o", "s", "^", "D"]
+
 LINESTYLES = ["-", "--", "-.", ":"]
 
 
-# ==================================================
-# 2. LATENCY VS BATCH LOAD
-# ==================================================
+def bootstrap_ci(values, iterations=5000):
+
+    values = np.asarray(values, dtype=float)
+
+    values = values[np.isfinite(values)]
+
+    if len(values) == 0:
+        return np.nan, np.nan
+
+    if len(values) == 1:
+        return float(values[0]), float(values[0])
+
+    rng = np.random.default_rng(SEED)
+
+    samples = rng.choice(
+        values,
+        size=(iterations, len(values)),
+        replace=True
+    )
+
+    estimates = np.median(
+        samples,
+        axis=1
+    )
+
+    return (
+        float(np.percentile(estimates, 2.5)),
+        float(np.percentile(estimates, 97.5))
+    )
+
 
 def plot_latency(df):
 
-    required_columns = [
+    required = [
         "model",
         "batch_size",
         "median_latency_ms",
@@ -40,90 +75,77 @@ def plot_latency(df):
         "latency_ci95_high"
     ]
 
-    missing = set(required_columns) - set(df.columns)
+    missing = set(required) - set(df.columns)
 
     if missing:
         raise ValueError(
-            f"Missing columns in metrics_summary.csv: {missing}"
+            f"Missing columns: {sorted(missing)}"
         )
 
-    df = df.copy()
-
-    numeric_columns = [
-        "batch_size",
-        "median_latency_ms",
-        "latency_ci95_low",
-        "latency_ci95_high"
-    ]
-
-    for column in numeric_columns:
-        df[column] = pd.to_numeric(
-            df[column],
-            errors="coerce"
-        )
-
-    df = df.replace(
-        [np.inf, -np.inf],
-        np.nan
+    fig, ax = plt.subplots(
+        figsize=(10, 6)
     )
 
-    df = df.dropna(
-        subset=["model", "batch_size", "median_latency_ms"]
+    models = sorted(
+        df["model"].dropna().unique()
     )
-
-    if df.empty:
-        raise ValueError(
-            "No valid latency data available for plotting."
-        )
-
-    fig, ax = plt.subplots(figsize=(9, 6))
-
-    models = df["model"].unique()
 
     for index, model in enumerate(models):
 
         subset = (
             df[df["model"] == model]
             .sort_values("batch_size")
+            .copy()
         )
 
         x = subset["batch_size"].to_numpy()
+
         y = subset["median_latency_ms"].to_numpy()
 
-        marker = MARKERS[index % len(MARKERS)]
-        linestyle = LINESTYLES[index % len(LINESTYLES)]
+        low = subset["latency_ci95_low"].to_numpy()
+
+        high = subset["latency_ci95_high"].to_numpy()
 
         ax.plot(
             x,
             y,
             label=model,
-            marker=marker,
-            linestyle=linestyle,
-            linewidth=1.8
+            marker=MARKERS[index % len(MARKERS)],
+            linestyle=LINESTYLES[
+                index % len(LINESTYLES)
+            ],
+            linewidth=2,
+            markersize=6
         )
 
-        # Bootstrap 95% confidence interval
-        ci_data = subset.dropna(
-            subset=[
-                "latency_ci95_low",
-                "latency_ci95_high"
-            ]
+        valid = (
+            np.isfinite(x) &
+            np.isfinite(low) &
+            np.isfinite(high)
         )
 
-        if not ci_data.empty:
+        ax.fill_between(
+            x[valid],
+            low[valid],
+            high[valid],
+            alpha=0.18
+        )
 
-            ax.fill_between(
-                ci_data["batch_size"].to_numpy(),
-                ci_data["latency_ci95_low"].to_numpy(),
-                ci_data["latency_ci95_high"].to_numpy(),
-                alpha=0.15
-            )
+    ax.set_title(
+        "Inference Latency vs Batch Size"
+    )
 
-    ax.set_title("Inference Latency vs Batch Load")
-    ax.set_xlabel("Batch multiplier")
-    ax.set_ylabel("Inference latency (ms)")
+    ax.set_xlabel(
+        "Batch multiplier (× test-fold size)"
+    )
 
-    ax.legend(title="Classifier")
+    ax.set_ylabel(
+        "Inference latency (ms)"
+    )
+
+    ax.legend(
+        title="Machine Learning Model"
+    )
 
     ax.grid(
         True,
@@ -132,6 +154,11 @@ def plot_latency(df):
     )
 
     fig.tight_layout()
+
+    FIGURES_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     fig.savefig(
         FIGURES_DIR / "fig1_latency_vs_load.pdf",
@@ -146,33 +173,29 @@ def plot_latency(df):
 
     plt.close(fig)
 
-    print("Figure 1 generated successfully.")
+    print("Figure 1 exported successfully.")
 
-
-# ==================================================
-# 3. LATENCY DISTRIBUTION
-# ==================================================
 
 def plot_distribution(raw):
 
-    required_columns = [
+    required = [
         "model",
         "phase",
         "is_warmup",
+        "batch_size",
         "latency_ms",
         "error"
     ]
 
-    missing = set(required_columns) - set(raw.columns)
+    missing = set(required) - set(raw.columns)
 
     if missing:
         raise ValueError(
-            f"Missing columns in raw data: {missing}"
+            f"Missing raw columns: {sorted(missing)}"
         )
 
     raw = raw.copy()
 
-    # Normalize Boolean columns
     raw["is_warmup"] = (
         raw["is_warmup"]
         .astype(str)
@@ -193,6 +216,11 @@ def plot_distribution(raw):
         .str.lower()
     )
 
+    raw["batch_size"] = pd.to_numeric(
+        raw["batch_size"],
+        errors="coerce"
+    )
+
     raw["latency_ms"] = pd.to_numeric(
         raw["latency_ms"],
         errors="coerce"
@@ -203,42 +231,97 @@ def plot_distribution(raw):
         np.nan
     )
 
-    # Keep only successful evaluation measurements
-    raw = raw[
+    evaluation = raw[
         (raw["phase"] == "evaluation") &
         (~raw["is_warmup"]) &
-        (~raw["error"])
+        (~raw["error"]) &
+        (raw["batch_size"] == 1)
     ].copy()
 
-    raw = raw.dropna(
+    evaluation = evaluation.dropna(
         subset=["model", "latency_ms"]
     )
 
-    if raw.empty:
+    if evaluation.empty:
         raise ValueError(
-            "No valid evaluation measurements available "
-            "for the latency distribution plot."
+            "No valid evaluation data for boxplot."
         )
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(
+        figsize=(10, 6)
+    )
+
+    order = sorted(
+        evaluation["model"].unique()
+    )
 
     sns.boxplot(
-        data=raw,
+        data=evaluation,
         x="model",
         y="latency_ms",
         hue="model",
+        order=order,
+        hue_order=order,
         palette="colorblind",
+        dodge=False,
+        showfliers=True,
         legend=False,
         ax=ax
     )
 
-    ax.set_title("Distribution of Inference Latency")
-    ax.set_xlabel("Machine Learning Model")
-    ax.set_ylabel("Inference latency (ms)")
+
+    for position, model in enumerate(order):
+
+        values = evaluation.loc[
+            evaluation["model"] == model,
+            "latency_ms"
+        ].to_numpy()
+
+        low, high = bootstrap_ci(values)
+
+        median = np.median(values)
+
+        ax.errorbar(
+            position,
+            median,
+            yerr=[
+                [median - low],
+                [high - median]
+            ],
+            fmt="D",
+            color="black",
+            capsize=5,
+            markersize=5,
+            label=(
+                "Median with 95% CI"
+                if position == 0
+                else None
+            )
+        )
+
+    ax.set_title(
+        "Inference Latency Distribution (Batch Multiplier = 1)"
+    )
+
+    ax.set_xlabel(
+        "Machine Learning Model"
+    )
+
+    ax.set_ylabel(
+        "Inference latency (ms)"
+    )
 
     ax.tick_params(
         axis="x",
         rotation=20
+    )
+
+    ax.legend()
+
+    ax.grid(
+        axis="y",
+        linestyle="--",
+        alpha=0.5
     )
 
     fig.tight_layout()
@@ -256,52 +339,39 @@ def plot_distribution(raw):
 
     plt.close(fig)
 
-    print("Figure 2 generated successfully.")
+    print("Figure 2 exported successfully.")
 
-
-# ==================================================
-# 4. MAIN
-# ==================================================
 
 def main():
 
-    FIGURES_DIR.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
     if not DATA_PATH.exists():
         raise FileNotFoundError(
-            f"Processed data not found: {DATA_PATH}. "
+            "Processed CSV not found. "
             "Run process_data.py first."
         )
 
     if not RAW_PATH.exists():
         raise FileNotFoundError(
-            f"Raw data not found: {RAW_PATH}. "
-            "Run run_task3_benchmark.py first."
+            "Raw JSONL file not found."
         )
 
-    print("Loading processed data...")
-
     df = pd.read_csv(DATA_PATH)
-
-    print("Loading raw benchmark measurements...")
 
     raw = pd.read_json(
         RAW_PATH,
         lines=True
     )
 
-    print("\nGenerating scientific visualizations...")
-
     plot_latency(df)
 
     plot_distribution(raw)
 
-    print("\nBoth figures exported successfully.")
+    print("\nAll scientific figures generated.")
 
-    print(f"Figures directory: {FIGURES_DIR}")
+    print(
+        "Output directory:",
+        FIGURES_DIR
+    )
 
 
 if __name__ == "__main__":
